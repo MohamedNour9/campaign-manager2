@@ -1,1 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+
+  accounts     EmailAccount[]
+  campaigns    Campaign[]
+  suppressions Suppression[]
+}
+
+model EmailAccount {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerType String
+  name         String?
+  config       String   // AES-256-GCM encrypted JSON
+  dailyLimit   Int      @default(500)
+  sentToday    Int      @default(0)
+  lastReset    DateTime @default(now())
+  status       String   @default("active") // active, paused, disabled
+
+  // Rate limiting beyond the daily cap
+  perMinuteLimit Int      @default(20)
+  perHourLimit   Int      @default(300)
+  sentThisMinute Int      @default(0)
+  sentThisHour   Int      @default(0)
+  minuteReset    DateTime @default(now())
+  hourReset      DateTime @default(now())
+
+  // Automatic warm-up: dailyLimit is ignored for the first few days in favor of a ramp
+  warmupEnabled  Boolean  @default(false)
+  warmupStartAt  DateTime?
+
+  // Health / observability
+  connectionStatus String   @default("unknown") // unknown, healthy, unhealthy
+  lastTestedAt     DateTime?
+  successCount     Int      @default(0)
+  failureCount     Int      @default(0)
+  bounceCount      Int      @default(0)
+  complaintCount   Int      @default(0)
+  lastUsedAt       DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  logs SendingLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Campaign {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  subject     String
+  senderName  String
+  htmlContent String
+  textContent String
+  status      String    @default("draft")
+  totalEmails Int       @default(0)
+  sentCount   Int       @default(0)
+  openCount   Int       @default(0)
+  clickCount  Int       @default(0)
+  bounceCount Int       @default(0)
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  recipients Recipient[]
+  logs       SendingLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Recipient {
+  id         String    @id @default(cuid())
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  email      String
+  firstName  String?
+  lastName   String?
+  company    String?
+  tag        String?   // simple segment label, e.g. "vip", "trial-users"
+  priority   Int       @default(0) // higher sends first (VIP)
+  customFields String? // JSON string of arbitrary extra merge fields
+  status     String    @default("pending")
+  sentAt     DateTime?
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  errorMsg   String?
+
+  @@unique([campaignId, email])
+  @@index([campaignId])
+  @@index([status])
+  @@index([email])
+  @@index([tag])
+}
+
+model BlockedDomain {
+  id        String   @id @default(cuid())
+  userId    String
+  domain    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, domain])
+}
+
+model SendingLog {
+  id          String        @id @default(cuid())
+  campaignId  String
+  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  recipientId String?
+  accountId   String?
+  account     EmailAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  status      String
+  error       String?
+  attempts    Int           @default(1)
+  createdAt   DateTime      @default(now())
+
+  @@index([campaignId])
+  @@index([accountId])
+}
+
+model Suppression {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, email])
+}
