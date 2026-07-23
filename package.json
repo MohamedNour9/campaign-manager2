@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "PORT=8080 bun run src/index.ts",
     "build": "prisma generate && tsc",
-    "start": "npx prisma db push --accept-data-loss && node dist/index.js",
-    "postinstall": "prisma generate",
+    "start": "npx prisma generate && npx prisma db push --accept-data-loss && node dist/index.js",
+    "postinstall": "npx prisma generate",
     "migrate": "prisma migrate dev --name init",
     "test": "jest"
   },
