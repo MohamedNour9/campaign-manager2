@@ -1,1 +1,1363 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مراسل — مدير الحملات البريدية</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════ RESET & VARIABLES ═══════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.12);
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f0f2f5;
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --surface: rgba(255, 255, 255, 0.85);
+      --surface-hover: rgba(255, 255, 255, 0.95);
+      --border: rgba(226, 232, 240, 0.6);
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,.12);
+      --shadow-glow: 0 0 20px var(--primary-glow);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --font: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+      --nav-height: 64px;
+    }
+
+    .dark {
+      --bg: #0b1120;
+      --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #0d0d1a 100%);
+      --surface: rgba(30, 41, 59, 0.85);
+      --surface-hover: rgba(30, 41, 59, 0.95);
+      --border: rgba(51, 65, 85, 0.6);
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --primary-light: rgba(99, 102, 241, 0.15);
+    }
+
+    /* ═══════════════════ BASE ═══════════════════ */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      background-image: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    * { scrollbar-width: thin; scrollbar-color: var(--text-muted) transparent; }
+
+    /* ═══════════════════ ANIMATIONS ═══════════════════ */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes progressFill { from { width: 0%; } }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(40px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(40px) scale(0.95); } }
+    @keyframes modalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .animate-in { animation: fadeIn 0.4s ease-out forwards; }
+    .animate-up { animation: fadeInUp 0.5s ease-out forwards; }
+
+    /* ═══════════════════ UNLOCK SCREEN ═══════════════════ */
+    #unlockScreen {
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 20px; position: relative; z-index: 1;
+      animation: fadeIn 0.6s ease-out;
+    }
+    #unlockScreen .glass-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%; max-width: 420px;
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+      text-align: center;
+      animation: fadeInScale 0.5s ease-out;
+    }
+    #unlockScreen .logo-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+      box-shadow: 0 8px 24px var(--primary-glow);
+      animation: float 3s ease-in-out infinite;
+    }
+    #unlockScreen h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+    #unlockScreen .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
+    #unlockScreen .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    #unlockScreen .input-group i {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    #unlockScreen input {
+      width: 100%;
+      padding: 14px 44px 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 15px;
+      font-family: var(--font);
+      transition: var(--transition);
+      outline: none;
+    }
+    #unlockScreen input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    #unlockScreen .btn-primary {
+      width: 100%; padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: white;
+      font-size: 16px; font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    #unlockScreen .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+    #unlockScreen .btn-primary:active { transform: translateY(0); }
+    #unlockError {
+      color: var(--danger); font-size: 13px; margin-top: 12px;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+    #unlockScreen .hint {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ═══════════════════ MAIN LAYOUT ═══════════════════ */
+    #app { display: none; position: relative; z-index: 1; }
+
+    /* Top Nav */
+    .topnav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 24px;
+      height: var(--nav-height);
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      animation: slideDown 0.4s ease-out;
+    }
+    .topnav .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 700;
+    }
+    .topnav .brand .logo {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: white;
+    }
+    .topnav-actions { display: flex; gap: 6px; align-items: center; }
+    .topnav-actions button {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .topnav-actions button:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .topnav-actions .active-btn {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .topnav-actions .active-btn:hover { background: var(--primary-hover); color: white; }
+    .topnav-actions .icon-btn {
+      width: 38px; height: 38px;
+      padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-xs);
+      font-size: 16px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 24px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* ═══════════════════ STATS CARDS ═══════════════════ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      animation: fadeInUp 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.2s; }
+    .stat-card:nth-child(5) { animation-delay: 0.25s; }
+    .stat-card .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .stat-card .stat-icon.blue { background: rgba(99, 102, 241, 0.12); color: var(--primary); }
+    .stat-card .stat-icon.green { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .stat-card .stat-icon.amber { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .stat-card .stat-icon.rose { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .stat-card .stat-icon.cyan { background: rgba(6, 182, 212, 0.12); color: var(--secondary); }
+    .stat-card .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 2px; font-weight: 500; }
+    .stat-card .value {
+      font-size: 28px; font-weight: 800;
+      background: linear-gradient(135deg, var(--text), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ═══════════════════ TABS ═══════════════════ */
+    .tabs-container {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 4px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 2px;
+      box-shadow: var(--shadow);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-family: var(--font);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn:hover { background: var(--primary-light); color: var(--primary); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: white;
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+    .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+    .tab-content.active { display: block; }
+
+    /* ═══════════════════ SECTION HEADERS ═══════════════════ */
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+    }
+    .section-header h3 {
+      font-size: 18px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px; font-weight: 500;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: white;
+      border-color: transparent;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, var(--primary-hover), #6d28d9); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
+    .btn-danger { border-color: var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-xs { padding: 4px 8px; font-size: 11px; border-radius: var(--radius-xs); }
+    .btn-icon { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; }
+
+    /* ═══════════════════ TABLES ═══════════════════ */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: right;
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.02);
+    }
+    td {
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--primary-light); }
+    tr { transition: var(--transition); }
+    .table-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* ═══════════════════ BADGES ═══════════════════ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge-draft { background: rgba(148, 163, 184, 0.15); color: var(--text-muted); }
+    .badge-sending { background: rgba(99, 102, 241, 0.12); color: var(--primary); }
+    .badge-paused { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .badge-completed { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .badge-cancelled { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-active { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .badge-error { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-pending { background: rgba(148, 163, 184, 0.12); color: var(--text-secondary); }
+    .badge-sent { background: rgba(6, 182, 212, 0.12); color: var(--secondary); }
+    .badge-opened { background: rgba(99, 102, 241, 0.12); color: var(--primary); }
+    .badge-failed { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-unsubscribed { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+
+    /* ═══════════════════ FORMS ═══════════════════ */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label {
+      display: block;
+      font-size: 13px; font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      transition: var(--transition);
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; font-family: monospace; font-size: 13px; }
+    .form-group .help-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ═══════════════════ MODAL ═══════════════════ */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center;
+      z-index: 1000; padding: 20px;
+      animation: modalOverlayIn 0.2s ease-out;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      width: 100%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 32px;
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+      animation: modalIn 0.3s ease-out;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .modal-header h2 { font-size: 20px; font-weight: 700; }
+    .modal-close {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent;
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      transition: var(--transition);
+    }
+    .modal-close:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ═══════════════════ TOAST ═══════════════════ */
+    .toast-container {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-sm);
+      padding: 14px 20px;
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+      display: flex; align-items: center; gap: 12px;
+      max-width: 440px;
+      font-size: 14px;
+      pointer-events: auto;
+      animation: toastIn 0.35s ease-out;
+      border-right: 4px solid var(--text-muted);
+    }
+    .toast.removing { animation: toastOut 0.3s ease-in forwards; }
+    .toast.success { border-right-color: var(--success); }
+    .toast.error { border-right-color: var(--danger); }
+    .toast.warning { border-right-color: var(--warning); }
+    .toast.info { border-right-color: var(--primary); }
+    .toast i { font-size: 18px; }
+    .toast.success i { color: var(--success); }
+    .toast.error i { color: var(--danger); }
+    .toast.warning i { color: var(--warning); }
+    .toast.info i { color: var(--primary); }
+
+    /* ═══════════════════ UPLOAD ZONE ═══════════════════ */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px; text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .upload-zone i { font-size: 32px; color: var(--primary); margin-bottom: 8px; }
+    .upload-zone p { color: var(--text-secondary); font-size: 14px; }
+
+    /* ═══════════════════ PROGRESS ═══════════════════ */
+    .progress-bar {
+      height: 8px;
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 100px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ═══════════════════ LOADING ═══════════════════ */
+    .loading-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    .loading-state .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    /* Skeleton loading */
+    .skeleton { background: linear-gradient(90deg, var(--border) 25%, rgba(148,163,184,0.1) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-xs); }
+    .skeleton-line { height: 14px; margin-bottom: 8px; width: 100%; }
+    .skeleton-line:last-child { width: 60%; }
+    .skeleton-card { height: 100px; border-radius: var(--radius); margin-bottom: 12px; }
+    .skeleton-row { height: 40px; margin-bottom: 4px; border-radius: 4px; }
+
+    /* ═══════════════════ EMPTY STATE ═══════════════════ */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state h4 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+    .empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+    /* ═══════════════════ CAMPAIGN STATS DETAIL ═══════════════════ */
+    .campaign-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .metric { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; text-align: center; border: 1px solid var(--border); }
+    .metric .m-value { font-size: 22px; font-weight: 700; }
+    .metric .m-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .metric .m-value.green { color: var(--success); }
+    .metric .m-value.blue { color: var(--primary); }
+    .metric .m-value.amber { color: var(--warning); }
+    .metric .m-value.rose { color: var(--danger); }
+
+    /* ═══════════════════ SEARCH ═══════════════════ */
+    .search-input {
+      position: relative;
+    }
+    .search-input i {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+    .search-input input {
+      padding: 8px 36px 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font);
+      outline: none;
+      width: 200px;
+      transition: var(--transition);
+    }
+    .search-input input:focus { border-color: var(--primary); width: 260px; }
+
+    /* ═══════════════════ RESPONSIVE ═══════════════════ */
+    @media (max-width: 768px) {
+      .container { padding: 12px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px 16px; }
+      .stat-card .value { font-size: 22px; }
+      .topnav { padding: 0 12px; }
+      .topnav .brand span { display: none; }
+      .tabs-container { flex-wrap: wrap; }
+      .tab-btn { font-size: 12px; padding: 10px 8px; flex: 1 0 auto; }
+      .tab-btn span { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal { padding: 20px; }
+      .campaign-metrics { grid-template-columns: repeat(2, 1fr); }
+      .search-input input { width: 140px; }
+      .search-input input:focus { width: 180px; }
+      .section-header { flex-direction: column; align-items: stretch; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat-card { padding: 12px; }
+      .stat-card .stat-icon { width: 32px; height: 32px; font-size: 14px; }
+      .stat-card .value { font-size: 18px; }
+      .campaign-metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
+    }
+
+    /* ═══════════════════ CONFIG FIELDS ═══════════════════ */
+    .config-field { display: none; animation: fadeIn 0.3s ease-out; }
+    .config-field.active { display: block; }
+    .config-field .form-group { margin-bottom: 12px; }
+
+    /* Campaign detail view */
+    .campaign-detail { display: none; }
+    .campaign-detail.active { display: block; animation: fadeIn 0.3s ease-out; }
+    .campaign-list.active { display: block; }
+    .campaign-list { display: none; }
+    .back-btn { cursor: pointer; color: var(--primary); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; transition: var(--transition); }
+    .back-btn:hover { gap: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ UNLOCK SCREEN ═══ -->
+<div id="unlockScreen">
+  <div class="glass-card">
+    <div class="logo-icon">✉️</div>
+    <h1>مراسل</h1>
+    <p class="subtitle">مدير الحملات البريدية الذكي</p>
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="unlockInput" placeholder="كلمة المرور" autofocus/>
+    </div>
+    <button class="btn-primary" onclick="unlock()">
+      <i class="fas fa-arrow-left-to-bracket"></i> دخول
+    </button>
+    <div id="unlockError"></div>
+    <div class="hint">🔐 أدخل كلمة المرور للدخول إلى لوحة التحكم</div>
+  </div>
+</div>
+
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app">
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <div class="brand">
+      <div class="logo">✉️</div>
+      <span>مراسل</span>
+    </div>
+    <div class="topnav-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="الوضع الليلي/النهاري">
+        <i class="fas fa-moon" id="themeIcon"></i>
+      </button>
+      <button id="nav-dashboard" class="active-btn" onclick="switchTab('dashboard')">
+        <i class="fas fa-chart-pie"></i> <span>الرئيسية</span>
+      </button>
+      <button id="nav-campaigns" onclick="switchTab('campaigns')">
+        <i class="fas fa-bullhorn"></i> <span>الحملات</span>
+      </button>
+      <button id="nav-accounts" onclick="switchTab('accounts')">
+        <i class="fas fa-key"></i> <span>الحسابات</span>
+      </button>
+      <button id="nav-settings" onclick="switchTab('settings')">
+        <i class="fas fa-sliders"></i> <span>الإعدادات</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('dashboard')"><i class="fas fa-chart-simple"></i> <span>لوحة المعلومات</span></button>
+      <button class="tab-btn" onclick="switchTab('campaigns')"><i class="fas fa-bullhorn"></i> <span>الحملات</span></button>
+      <button class="tab-btn" onclick="switchTab('accounts')"><i class="fas fa-envelope"></i> <span>حسابات الإرسال</span></button>
+      <button class="tab-btn" onclick="switchTab('settings')"><i class="fas fa-ban"></i> <span>المحظورات</span></button>
+    </div>
+
+    <!-- ═══ TAB: DASHBOARD ═══ -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-envelope"></i></div><div class="label">حسابات الإرسال</div><div class="value" id="statAccounts">0</div></div>
+        <div class="stat-card"><div class="stat-icon cyan"><i class="fas fa-bullhorn"></i></div><div class="label">الحملات</div><div class="value" id="statCampaigns">0</div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="label">أُرسل</div><div class="value" id="statSent">0</div></div>
+        <div class="stat-card"><div class="stat-icon amber"><i class="fas fa-eye"></i></div><div class="label">فتح</div><div class="value" id="statOpens">0</div></div>
+        <div class="stat-card"><div class="stat-icon rose"><i class="fas fa-mouse-pointer"></i></div><div class="label">نقر</div><div class="value" id="statClicks">0</div></div>
+      </div>
+
+      <div class="section-header">
+        <h3><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> آخر الحملات</h3>
+        <div class="search-input">
+          <i class="fas fa-search"></i>
+          <input type="text" id="campaignSearch" placeholder="بحث..." oninput="filterCampaigns()"/>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>الاسم</th><th>الحالة</th><th>الموضوع</th><th>التقدم</th><th>التاريخ</th></tr></thead>
+          <tbody id="recentCampaigns"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: CAMPAIGNS ═══ -->
+    <div id="tab-campaigns" class="tab-content">
+      <div class="campaign-list active" id="campaignListView">
+        <div class="section-header">
+          <h3><i class="fas fa-bullhorn" style="color:var(--primary)"></i> الحملات البريدية</h3>
+          <button class="btn btn-primary" onclick="showNewCampaign()"><i class="fas fa-plus"></i> حملة جديدة</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>الاسم</th><th>الحالة</th><th>الموضوع</th><th>أُرسل / الكل</th><th>فتح</th><th>نقر</th><th></th></tr></thead>
+            <tbody id="campaignsTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="campaign-detail" id="campaignDetailView">
+        <div class="back-btn" onclick="showCampaignList()"><i class="fas fa-arrow-right"></i> العودة للقائمة</div>
+        <div id="campaignDetailContent"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: ACCOUNTS ═══ -->
+    <div id="tab-accounts" class="tab-content">
+      <div class="section-header">
+        <h3><i class="fas fa-envelope" style="color:var(--primary)"></i> حسابات الإرسال</h3>
+        <button class="btn btn-primary" onclick="showNewAccount()"><i class="fas fa-plus"></i> حساب جديد</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>النوع</th><th>الاسم</th><th>الحالة</th><th>الحد اليومي</th><th>أُرسل اليوم</th><th>نجاح</th><th>أخِر استخدام</th><th></th></tr></thead>
+          <tbody id="accountsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: SETTINGS ═══ -->
+    <div id="tab-settings" class="tab-content">
+      <div class="section-header">
+        <h3><i class="fas fa-ban" style="color:var(--danger)"></i> النطاقات المحظورة</h3>
+        <button class="btn btn-danger btn-sm" onclick="showAddBlockedDomain()"><i class="fas fa-plus"></i> إضافة نطاق</button>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table><thead><tr><th>النطاق</th><th>تاريخ الإضافة</th><th></th></tr></thead>
+          <tbody id="blockedDomainsTable"></tbody>
+        </table>
+      </div>
+
+      <div class="section-header">
+        <h3><i class="fas fa-users-slash" style="color:var(--primary)"></i> قائمة الحظر (Suppressions)</h3>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>البريد الإلكتروني</th><th>السبب</th><th>تاريخ الإضافة</th><th></th></tr></thead>
+          <tbody id="suppressionsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL CONTAINER ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let TOKEN = localStorage.getItem('token') || '';
+let AUTO_REFRESH = null;
+const API_BASE = '';
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark');
+    document.getElementById('themeIcon').className = 'fas fa-sun';
+  }
+  if (TOKEN) { document.getElementById('unlockScreen').style.display = 'none'; document.getElementById('app').style.display = 'block'; loadAll(); }
+});
+
+// ═══════════════════════════════════════════════════
+// DARK / LIGHT THEME
+// ═══════════════════════════════════════════════════
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+// ═══════════════════════════════════════════════════
+// API HELPER
+// ═══════════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = { method, headers: {} };
+  if (TOKEN) opts.headers['Authorization'] = 'Bearer ' + TOKEN;
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const resp = await fetch(API_BASE + path, opts);
+  const text = await resp.text();
+  try { return { status: resp.status, data: JSON.parse(text) }; } catch { return { status: resp.status, data: text }; }
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 3500) {
+  const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '"></i> ' + msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ═══════════════════════════════════════════════════
+// UNLOCK
+// ═══════════════════════════════════════════════════
+async function unlock() {
+  const pw = document.getElementById('unlockInput').value;
+  const r = await api('POST', '/api/unlock', { password: pw });
+  if (r.data.token) {
+    TOKEN = r.data.token;
+    localStorage.setItem('token', TOKEN);
+    document.getElementById('unlockScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('app').style.animation = 'fadeIn 0.5s ease-out';
+    loadAll();
+    toast('مرحباً بك في مراسل 🎉', 'success');
+  } else {
+    document.getElementById('unlockError').style.display = 'block';
+    document.getElementById('unlockError').textContent = '❌ ' + (r.data.error || 'كلمة المرور خطأ');
+  }
+}
+document.getElementById('unlockInput').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+// ═══════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector('.tab-btn[onclick*="' + name + '"]')?.classList.add('active');
+  document.querySelectorAll('.topnav-actions button').forEach(b => b.classList.remove('active-btn'));
+  const navBtn = document.getElementById('nav-' + name);
+  if (navBtn) navBtn.classList.add('active-btn');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'campaigns') loadCampaigns();
+  if (name === 'accounts') loadAccounts();
+  if (name === 'settings') { loadBlockedDomains(); loadSuppressions(); }
+}
+
+// ═══════════════════════════════════════════════════
+// LOAD ALL
+// ═══════════════════════════════════════════════════
+function loadAll() {
+  loadDashboard();
+  if (AUTO_REFRESH) clearInterval(AUTO_REFRESH);
+  AUTO_REFRESH = setInterval(loadDashboard, 15000);
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+async function loadDashboard() {
+  const r = await api('GET', '/api/stats');
+  if (r.status !== 200) return;
+  const d = r.data;
+  animateValue('statAccounts', d.accounts);
+  animateValue('statCampaigns', d.campaigns);
+  animateValue('statSent', d.totalSent);
+  animateValue('statOpens', d.totalOpens);
+  animateValue('statClicks', d.totalClicks);
+
+  // Recent campaigns
+  const tb = document.getElementById('recentCampaigns');
+  if (d.recentCampaigns && d.recentCampaigns.length) {
+    tb.innerHTML = d.recentCampaigns.map(c => `<tr>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${statusBadge(c.status)}</td>
+      <td style="color:var(--text-secondary);font-size:13px">${esc(c.subject)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span>${c.sentCount||0}/${c.totalCount||0}</span>
+          <div class="progress-bar" style="flex:1;max-width:100px"><div class="fill" style="width:${c.totalCount?Math.min(100,((c.sentCount||0)/c.totalCount*100)):0}%"></div></div>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text-muted)">${timeAgo(c.updatedAt)}</td>
+    </tr>`).join('');
+  } else {
+    tb.innerHTML = '<tr><td colspan="5" class="empty-state" style="padding:32px"><div class="icon" style="font-size:40px">📭</div><p>لا توجد حملات بعد. أنشئ حملة جديدة!</p></td></tr>';
+  }
+}
+
+function animateValue(id, val) {
+  const el = document.getElementById(id);
+  const current = parseInt(el.textContent) || 0;
+  if (current === val) return;
+  el.textContent = val;
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = 'countUp 0.3s ease-out';
+}
+
+// ═══════════════════════════════════════════════════
+// CAMPAIGNS
+// ═══════════════════════════════════════════════════
+async function loadCampaigns() {
+  const tb = document.getElementById('campaignsTable');
+  tb.innerHTML = '<tr><td colspan="7"><div class="loading-state"><div class="spinner"></div><span>جاري التحميل...</span></div></td></tr>';
+  const r = await api('GET', '/api/campaigns');
+  if (r.status !== 200) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--danger)">خطأ في تحميل الحملات</td></tr>'; return; }
+  const camps = r.data;
+  if (!camps.length) {
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📬</div><h4>لا توجد حملات</h4><p>أنشئ أول حملة إرسال الآن</p><button class="btn btn-primary" onclick="showNewCampaign()"><i class="fas fa-plus"></i> حملة جديدة</button></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = camps.map(c => `<tr>
+    <td><strong><a href="#" onclick="showCampaignDetail('${c.id}');return false" style="color:var(--primary);text-decoration:none">${esc(c.name)}</a></strong></td>
+    <td>${statusBadge(c.status)}</td>
+    <td style="color:var(--text-secondary);font-size:13px">${esc(c.subject)}</td>
+    <td>${c.sentCount||0} / ${c.totalCount||0}</td>
+    <td>${c.openCount||0}</td>
+    <td>${c.clickCount||0}</td>
+    <td>
+      <div class="table-actions">
+        ${c.status==='draft'?`<button class="btn btn-xs btn-primary" onclick="startCampaign('${c.id}')"><i class="fas fa-play"></i></button>`:''}
+        ${c.status==='sending'?`<button class="btn btn-xs btn-warning" onclick="pauseCampaign('${c.id}')"><i class="fas fa-pause"></i></button>`:''}
+        <button class="btn btn-xs" onclick="showCampaignDetail('${c.id}')"><i class="fas fa-chart-bar"></i></button>
+        <button class="btn btn-xs btn-danger" onclick="deleteCampaign('${c.id}')"><i class="fas fa-trash-can"></i></button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function filterCampaigns() {
+  // Simple filter on the dashboard table
+  const q = document.getElementById('campaignSearch').value.toLowerCase();
+  document.querySelectorAll('#recentCampaigns tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+async function showCampaignDetail(id) {
+  document.getElementById('campaignListView').classList.remove('active');
+  document.getElementById('campaignDetailView').classList.add('active');
+  const div = document.getElementById('campaignDetailContent');
+  div.innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+
+  const r = await api('GET', '/api/campaigns/' + id);
+  const s = await api('GET', '/api/campaigns/' + id + '/stats');
+  const recip = await api('GET', '/api/campaigns/' + id + '/recipients');
+
+  if (r.status !== 200) { div.innerHTML = '<p style="color:var(--danger)">خطأ في تحميل الحملة</p>'; return; }
+
+  const c = r.data;
+  const stat = s.data || {};
+  const recips = recip.data || [];
+
+  div.innerHTML = `
+    <div style="background:var(--surface);border-radius:var(--radius);padding:24px;border:1px solid var(--border);margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:22px;margin-bottom:4px">${esc(c.name)}</h2>
+          <p style="color:var(--text-secondary);font-size:14px">${esc(c.subject)}</p>
+        </div>
+        ${statusBadge(c.status)}
+      </div>
+      <div class="campaign-metrics" style="margin-top:20px">
+        <div class="metric"><div class="m-value green">${stat.sent||0}</div><div class="m-label">أُرسل</div></div>
+        <div class="metric"><div class="m-value blue">${stat.opens||0}</div><div class="m-label">فتح</div></div>
+        <div class="metric"><div class="m-value amber">${stat.clicks||0}</div><div class="m-label">نقر</div></div>
+        <div class="metric"><div class="m-value rose">${stat.failed||0}</div><div class="m-label">فشل</div></div>
+      </div>
+      ${c.totalCount ? `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>التقدم</span><span>${c.sentCount||0} / ${c.totalCount} (${Math.round(((c.sentCount||0)/c.totalCount)*100)}%)</span></div><div class="progress-bar"><div class="fill" style="width:${Math.min(100,((c.sentCount||0)/c.totalCount)*100)}%"></div></div></div>` : ''}
+      ${c.status==='draft' ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn btn-primary" onclick="startCampaign('${c.id}')"><i class="fas fa-play"></i> بدء الإرسال</button>
+        <button class="btn" onclick="exportCampaign('${c.id}')"><i class="fas fa-download"></i> تصدير CSV</button>
+        <button class="btn btn-danger" onclick="deleteCampaign('${c.id}')"><i class="fas fa-trash-can"></i> حذف</button>
+      </div>` : ''}
+      ${c.status==='sending' ? `<button class="btn" onclick="pauseCampaign('${c.id}')" style="margin-top:12px"><i class="fas fa-pause"></i> إيقاف مؤقت</button>` : ''}
+    </div>
+
+    <div style="background:var(--surface);border-radius:var(--radius);padding:24px;border:1px solid var(--border)">
+      <h4 style="margin-bottom:12px;font-size:16px"><i class="fas fa-users"></i> المستلمون (${recips.length})</h4>
+      ${recips.length ? `<div class="table-wrap" style="box-shadow:none;border:1px solid var(--border)">
+        <table><thead><tr><th>البريد</th><th>الاسم</th><th>الحالة</th><th>الأولوية</th></tr></thead>
+        <tbody>${recips.slice(0,20).map(r => `<tr>
+          <td>${esc(r.email)}</td>
+          <td>${esc(r.firstName||'')} ${esc(r.lastName||'')}</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>${r.priority||0}</td>
+        </tr>`).join('')}</tbody></table>
+        ${recips.length>20 ? `<p style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px">... و ${recips.length-20} آخرون</p>` : ''}
+      </div>` : '<p style="color:var(--text-muted);text-align:center;padding:20px">لا يوجد مستلمون في هذه الحملة</p>'}
+    </div>
+  `;
+}
+
+function showCampaignList() {
+  document.getElementById('campaignDetailView').classList.remove('active');
+  document.getElementById('campaignListView').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+// NEW CAMPAIGN MODAL
+// ═══════════════════════════════════════════════════
+function showNewCampaign() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header"><h2><i class="fas fa-plus-circle" style="color:var(--primary)"></i> حملة جديدة</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="form-grid">
+      <div class="form-group full-width"><label>اسم الحملة</label><input id="newCampName" placeholder="مثال: النشرة الشهرية - مارس"/></div>
+      <div class="form-group full-width"><label>الموضوع</label><input id="newCampSubject" placeholder="مثال: مرحباً {{firstName}}! عروض هذا الشهر"/><div class="help-text">استخدم {{firstName}}، {{lastName}}، {{company}} للتخصيص</div></div>
+      <div class="form-group"><label>اسم المرسل</label><input id="newCampSender" placeholder="مراسل"/></div>
+      <div class="form-group"><label>الوسم (Tag)</label><input id="newCampTag" placeholder="اختياري"/></div>
+      <div class="form-group full-width"><label>محتوى HTML</label><textarea id="newCampHtml" rows="6" placeholder="<h1>أهلاً {{firstName}}!</h1>..."></textarea></div>
+      <div class="form-group full-width"><label>محتوى نصي</label><textarea id="newCampText" rows="3" placeholder="أهلاً {{firstName}}!..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="createCampaign()"><i class="fas fa-check"></i> إنشاء الحملة</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+async function createCampaign() {
+  const data = {
+    name: document.getElementById('newCampName').value,
+    subject: document.getElementById('newCampSubject').value,
+    senderName: document.getElementById('newCampSender').value,
+    htmlContent: document.getElementById('newCampHtml').value,
+    textContent: document.getElementById('newCampText').value,
+    tag: document.getElementById('newCampTag').value || null,
+  };
+  if (!data.name || !data.subject) { toast('اسم الحملة والموضوع مطلوبان', 'error'); return; }
+  const r = await api('POST', '/api/campaigns', data);
+  if (r.status === 201) { toast('تم إنشاء الحملة ✅', 'success'); closeModal(); loadCampaigns(); }
+  else toast(r.data.error || 'خطأ في إنشاء الحملة', 'error');
+}
+
+async function deleteCampaign(id) {
+  if (!confirm('هل أنت متأكد من حذف هذه الحملة؟')) return;
+  const r = await api('DELETE', '/api/campaigns/' + id);
+  if (r.status === 200) { toast('تم حذف الحملة 🗑️', 'success'); loadCampaigns(); loadDashboard(); showCampaignList(); }
+  else toast(r.data.error || 'خطأ في الحذف', 'error');
+}
+
+async function startCampaign(id) {
+  const r = await api('POST', '/api/campaigns/' + id + '/start');
+  if (r.status === 200) { toast(`تم بدء الإرسال ✅ (${r.data.queued} إيميل في الطابور)`, 'success'); loadCampaigns(); }
+  else toast(r.data.error || 'خطأ في بدء الإرسال', 'error');
+}
+
+async function pauseCampaign(id) {
+  const r = await api('POST', '/api/campaigns/' + id + '/pause');
+  if (r.status === 200) { toast('تم إيقاف الحملة مؤقتاً ⏸️', 'info'); loadCampaigns(); }
+  else toast(r.data.error || 'خطأ', 'error');
+}
+
+async function exportCampaign(id) {
+  const resp = await fetch(API_BASE + '/api/campaigns/' + id + '/export', {
+    headers: { 'Authorization': 'Bearer ' + TOKEN }
+  });
+  if (!resp.ok) { toast('خطأ في التصدير', 'error'); return; }
+  const blob = await resp.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'recipients.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('تم تحميل CSV ✅', 'success');
+}
+
+function openCampaignExport(id) {
+  window.open(API_BASE + '/api/campaigns/' + id + '/export?token=' + TOKEN, '_blank');
+  toast('جاري تحميل ملف CSV...', 'info');
+}
+
+// ═══════════════════════════════════════════════════
+// ACCOUNTS
+// ═══════════════════════════════════════════════════
+async function loadAccounts() {
+  const tb = document.getElementById('accountsTable');
+  tb.innerHTML = '<tr><td colspan="8"><div class="loading-state"><div class="spinner"></div></div></td></tr>';
+  const r = await api('GET', '/api/accounts');
+  if (r.status !== 200) return;
+  const accts = r.data;
+  if (!accts.length) {
+    tb.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">🔑</div><h4>لا توجد حسابات إرسال</h4><p>أضف حساب SMTP او API (Brevo, SendGrid, Mailgun, SES)</p><button class="btn btn-primary" onclick="showNewAccount()"><i class="fas fa-plus"></i> إضافة حساب</button></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = accts.map(a => `<tr>
+    <td><span class="badge badge-active">${esc(a.providerType)}</span></td>
+    <td><strong>${esc(a.name)}</strong></td>
+    <td>${statusBadge(a.status)}</td>
+    <td>${a.dailyLimit||300}</td>
+    <td>${a.sentToday||0}</td>
+    <td>${a.successCount||0}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${a.lastUsedAt?timeAgo(a.lastUsedAt):'—'}</td>
+    <td><div class="table-actions"><button class="btn btn-xs" onclick="editAccount('${a.id}')"><i class="fas fa-pen-to-square"></i></button><button class="btn btn-xs btn-danger" onclick="deleteAccount('${a.id}')"><i class="fas fa-trash-can"></i></button></div></td>
+  </tr>`).join('');
+}
+
+function showNewAccount() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header"><h2><i class="fas fa-plus-circle" style="color:var(--primary)"></i> حساب إرسال جديد</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="form-group"><label>نوع المزود</label>
+      <select id="newAcctType" onchange="updateAcctFields()">
+        <option value="">اختر النوع...</option>
+        <option value="smtp">📧 SMTP (Gmail, Outlook, أي server)</option>
+        <option value="brevo">✉️ Brevo (Sendinblue)</option>
+        <option value="sendgrid">✉️ SendGrid</option>
+        <option value="mailgun">✉️ Mailgun</option>
+        <option value="ses">☁️ Amazon SES</option>
+      </select>
+    </div>
+    <div class="form-group"><label>اسم الحساب</label><input id="newAcctName" placeholder="مثال: Gmail الرئيسي"/></div>
+    <div id="acctConfigFields">
+      <div class="config-field" data-type="smtp">
+        <div class="form-group"><label>SMTP Host</label><input class="cfg" data-key="host" placeholder="smtp.gmail.com"/></div>
+        <div class="form-group" style="display:inline-block;width:48%"><label>Port</label><input class="cfg" data-key="port" placeholder="587"/></div>
+        <div class="form-group" style="display:inline-block;width:48%"><label>Secure (SSL)</label><select class="cfg" data-key="secure"><option value="false">No (587)</option><option value="true">Yes (465)</option></select></div>
+        <div class="form-group"><label>Username</label><input class="cfg" data-key="username" placeholder="your@email.com"/></div>
+        <div class="form-group"><label>Password</label><input class="cfg" data-key="password" type="password" placeholder="App password"/></div>
+        <div class="form-group"><label>From Email</label><input class="cfg" data-key="fromEmail" placeholder="sender@yourdomain.com"/></div>
+      </div>
+      <div class="config-field" data-type="brevo">
+        <div class="form-group"><label>API Key v3</label><input class="cfg" data-key="apiKey" type="password" placeholder="xkeysib-..."/></div>
+        <div class="form-group"><label>From Email</label><input class="cfg" data-key="fromEmail" placeholder="sender@yourdomain.com"/></div>
+      </div>
+      <div class="config-field" data-type="sendgrid">
+        <div class="form-group"><label>API Key</label><input class="cfg" data-key="apiKey" type="password" placeholder="SG.xxxxx..."/></div>
+        <div class="form-group"><label>From Email</label><input class="cfg" data-key="fromEmail" placeholder="sender@yourdomain.com"/></div>
+      </div>
+      <div class="config-field" data-type="mailgun">
+        <div class="form-group"><label>API Key</label><input class="cfg" data-key="apiKey" type="password"/></div>
+        <div class="form-group"><label>Domain</label><input class="cfg" data-key="domain" placeholder="mg.yourdomain.com"/></div>
+        <div class="form-group"><label>From Email</label><input class="cfg" data-key="fromEmail" placeholder="sender@yourdomain.com"/></div>
+      </div>
+      <div class="config-field" data-type="ses">
+        <div class="form-group"><label>Region</label><input class="cfg" data-key="region" placeholder="us-east-1"/></div>
+        <div class="form-group"><label>SMTP Username</label><input class="cfg" data-key="smtpUsername"/></div>
+        <div class="form-group"><label>SMTP Password</label><input class="cfg" data-key="smtpPassword" type="password"/></div>
+        <div class="form-group"><label>From Email</label><input class="cfg" data-key="fromEmail" placeholder="verified@ses.com"/></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="createAccount()"><i class="fas fa-check"></i> إضافة الحساب</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function updateAcctFields() {
+  const type = document.getElementById('newAcctType').value;
+  document.querySelectorAll('.config-field').forEach(f => f.classList.remove('active'));
+  if (type) {
+    const f = document.querySelector('.config-field[data-type="' + type + '"]');
+    if (f) f.classList.add('active');
+  }
+}
+
+async function createAccount() {
+  const type = document.getElementById('newAcctType').value;
+  const name = document.getElementById('newAcctName').value;
+  if (!type || !name) { toast('اختر نوع المزود وأدخل اسم الحساب', 'error'); return; }
+  const config = {};
+  document.querySelectorAll('.config-field.active .cfg').forEach(inp => {
+    const key = inp.getAttribute('data-key');
+    let val = inp.value;
+    if (inp.tagName === 'SELECT' && (val === 'true' || val === 'false')) val = val === 'true';
+    if (inp.getAttribute('type') === 'number') val = parseInt(val) || 0;
+    if (val) config[key] = val;
+  });
+  if (!config.fromEmail) { toast('البريد الإلكتروني للمرسل (fromEmail) مطلوب', 'error'); return; }
+  const r = await api('POST', '/api/accounts', { providerType: type, name, config });
+  if (r.status === 201) { toast('تم إضافة الحساب ✅', 'success'); closeModal(); loadAccounts(); }
+  else toast(r.data.error || 'خطأ في الإضافة', 'error');
+}
+
+async function editAccount(id) {
+  const r = await api('GET', '/api/accounts');
+  if (r.status !== 200) return;
+  const acct = r.data.find(a => a.id === id);
+  if (!acct) return;
+  toast('تعديل الحساب قيد التطوير', 'info');
+}
+
+async function deleteAccount(id) {
+  if (!confirm('حذف حساب الإرسال؟')) return;
+  const r = await api('DELETE', '/api/accounts/' + id);
+  if (r.status === 200) { toast('تم حذف الحساب 🗑️', 'success'); loadAccounts(); }
+  else toast(r.data.error || 'خطأ', 'error');
+}
+
+// ═══════════════════════════════════════════════════
+// BLOCKED DOMAINS
+// ═══════════════════════════════════════════════════
+async function loadBlockedDomains() {
+  const tb = document.getElementById('blockedDomainsTable');
+  const r = await api('GET', '/api/blocked-domains');
+  if (r.status !== 200) return;
+  const list = r.data;
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد نطاقات محظورة</td></tr>'; return; }
+  tb.innerHTML = list.map(d => `<tr>
+    <td><span class="badge badge-cancelled"><i class="fas fa-ban"></i> ${esc(d.domain)}</span></td>
+    <td style="font-size:12px;color:var(--text-muted)">${timeAgo(d.createdAt)}</td>
+    <td><button class="btn btn-xs btn-danger" onclick="deleteBlockedDomain('${d.id}')"><i class="fas fa-trash-can"></i></button></td>
+  </tr>`).join('');
+}
+
+function showAddBlockedDomain() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header"><h2><i class="fas fa-ban" style="color:var(--danger)"></i> حظر نطاق</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <p style="color:var(--text-secondary);margin-bottom:16px">سيتم رفض أي إيميل يرسل إلى هذا النطاق</p>
+    <div class="form-group"><label>النطاق</label><input id="newBlockDomain" placeholder="مثال: spammers.com"/></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">إلغاء</button><button class="btn btn-danger" onclick="addBlockedDomain()"><i class="fas fa-ban"></i> حظر</button></div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+async function addBlockedDomain() {
+  const domain = document.getElementById('newBlockDomain').value.trim();
+  if (!domain) { toast('أدخل النطاق', 'error'); return; }
+  const r = await api('POST', '/api/blocked-domains', { domain });
+  if (r.status === 201) { toast('تم حظر النطاق 🚫', 'success'); closeModal(); loadBlockedDomains(); }
+  else toast(r.data.error || 'خطأ', 'error');
+}
+
+async function deleteBlockedDomain(id) {
+  const r = await api('DELETE', '/api/blocked-domains/' + id);
+  if (r.status === 200) { toast('تم إلغاء حظر النطاق ✅', 'success'); loadBlockedDomains(); }
+  else toast(r.data.error || 'خطأ', 'error');
+}
+
+// ═══════════════════════════════════════════════════
+// SUPPRESSIONS
+// ═══════════════════════════════════════════════════
+async function loadSuppressions() {
+  const tb = document.getElementById('suppressionsTable');
+  const r = await api('GET', '/api/suppressions');
+  if (r.status !== 200) return;
+  const list = r.data;
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">قائمة الحظر فارغة</td></tr>'; return; }
+  tb.innerHTML = list.map(s => `<tr>
+    <td>${esc(s.email)}</td>
+    <td><span class="badge badge-${s.reason==='unsubscribed'?'unsubscribed':s.reason==='bounced'?'failed':'pending'}">${esc(s.reason||'manual')}</span></td>
+    <td style="font-size:12px;color:var(--text-muted)">${timeAgo(s.createdAt)}</td>
+    <td><button class="btn btn-xs btn-danger" onclick="deleteSuppression('${s.id}')"><i class="fas fa-trash-can"></i></button></td>
+  </tr>`).join('');
+}
+
+async function deleteSuppression(id) {
+  const r = await api('DELETE', '/api/suppressions/' + id);
+  if (r.status === 200) { toast('تم الحذف ✅', 'success'); loadSuppressions(); }
+  else toast('خطأ', 'error');
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function statusBadge(status) {
+  const map = {
+    draft: ['badge-draft', 'مسودة', 'fa-pen'],
+    sending: ['badge-sending', 'قيد الإرسال', 'fa-spinner fa-spin'],
+    paused: ['badge-paused', 'متوقف', 'fa-pause'],
+    completed: ['badge-completed', 'مكتمل', 'fa-check'],
+    cancelled: ['badge-cancelled', 'ملغي', 'fa-xmark'],
+    active: ['badge-active', 'نشط', 'fa-check'],
+    error: ['badge-error', 'خطأ', 'fa-triangle-exclamation'],
+    pending: ['badge-pending', 'قيد الانتظار', 'fa-clock'],
+    sent: ['badge-sent', 'أُرسل', 'fa-check'],
+    opened: ['badge-opened', 'تم الفتح', 'fa-eye'],
+    queued: ['badge-info', 'في الطابور', 'fa-list'],
+    failed: ['badge-failed', 'فشل', 'fa-xmark'],
+    unsubscribed: ['badge-unsubscribed', 'ألغى الاشتراك', 'fa-user-slash'],
+  };
+  const [cls, label, icon] = map[status] || ['badge-pending', status, 'fa-circle'];
+  return `<span class="badge ${cls}"><i class="fas ${icon}"></i> ${label}</span>`;
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const now = Date.now();
+  const d = new Date(dateStr).getTime();
+  const diff = now - d;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'الآن';
+  if (mins < 60) return `منذ ${mins} د`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `منذ ${hrs} س`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `منذ ${days} ي`;
+  return new Date(dateStr).toLocaleDateString('ar-SA');
+}
+</script>
+</body>
+</html>

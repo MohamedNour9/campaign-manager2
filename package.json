@@ -3,28 +3,27 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "PORT=8080 bun run src/index.ts",
     "build": "prisma generate && tsc",
-    "start": "node dist/index.js",
+    "start": "npx prisma migrate deploy && node dist/index.js",
+    "postinstall": "prisma generate",
     "migrate": "prisma migrate dev --name init",
     "test": "jest"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.2",
+    "@prisma/client": "5.10.2",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
-    "bullmq": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
     "express-rate-limit": "^7.2.0",
     "helmet": "^7.1.0",
-    "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.9",
-    "swagger-ui-express": "^5.0.0",
-    "swagger-jsdoc": "^6.2.8"
+    "prisma": "5.10.2",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -38,7 +37,6 @@
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.6",
     "jest": "^29.7.0",
-    "prisma": "^5.10.2",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
     "ts-node-dev": "^2.0.0",

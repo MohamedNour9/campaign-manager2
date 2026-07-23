@@ -3,10 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
+// Single-owner app — everything belongs to one user account
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -14,138 +15,155 @@ model User {
   name      String?
   createdAt DateTime @default(now())
 
-  accounts     EmailAccount[]
-  campaigns    Campaign[]
-  suppressions Suppression[]
+  emailAccounts  EmailAccount[]
+  campaigns      Campaign[]
+  suppressions   Suppression[]
+  blockedDomains BlockedDomain[]
 }
 
+// Sending accounts (SMTP, Brevo, SendGrid, Mailgun, SES)
 model EmailAccount {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  providerType String
-  name         String?
-  config       String   // AES-256-GCM encrypted JSON
-  dailyLimit   Int      @default(500)
-  sentToday    Int      @default(0)
-  lastReset    DateTime @default(now())
-  status       String   @default("active") // active, paused, disabled
-
-  // Rate limiting beyond the daily cap
-  perMinuteLimit Int      @default(20)
-  perHourLimit   Int      @default(300)
-  sentThisMinute Int      @default(0)
-  sentThisHour   Int      @default(0)
-  minuteReset    DateTime @default(now())
-  hourReset      DateTime @default(now())
-
-  // Automatic warm-up: dailyLimit is ignored for the first few days in favor of a ramp
+  id             String   @id @default(cuid())
+  userId         String
+  providerType   String   // smtp | brevo | sendgrid | mailgun | ses
+  name           String
+  config         String   // encrypted JSON
+  dailyLimit     Int      @default(300)
+  perHourLimit   Int      @default(50)
+  perMinuteLimit Int      @default(10)
+  status         String   @default("active") // active | paused | error
   warmupEnabled  Boolean  @default(false)
   warmupStartAt  DateTime?
+  sentToday      Int      @default(0)
+  sentThisMinute Int      @default(0)
+  sentThisHour   Int      @default(0)
+  lastReset      DateTime @default(now())
+  minuteReset    DateTime @default(now())
+  hourReset      DateTime @default(now())
+  successCount   Int      @default(0)
+  failureCount   Int      @default(0)
+  lastUsedAt     DateTime?
+  createdAt      DateTime @default(now())
 
-  // Health / observability
-  connectionStatus String   @default("unknown") // unknown, healthy, unhealthy
-  lastTestedAt     DateTime?
-  successCount     Int      @default(0)
-  failureCount     Int      @default(0)
-  bounceCount      Int      @default(0)
-  complaintCount   Int      @default(0)
-  lastUsedAt       DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
+// Email campaigns
+model Campaign {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  subject      String
+  senderName   String   @default("")
+  htmlContent  String   @default("")
+  textContent  String   @default("")
+  status       String   @default("draft") // draft | queued | sending | paused | completed | cancelled
+  tag          String?
+  scheduledAt  DateTime?
+  sentCount    Int      @default(0)
+  totalCount   Int      @default(0)
+  openCount    Int      @default(0)
+  clickCount   Int      @default(0)
+  failedCount  Int      @default(0)
+  startedAt    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  logs SendingLog[]
-
-  @@index([userId])
-  @@index([status])
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipients     Recipient[]
+  sendingLogs    SendingLog[]
+  trackingEvents TrackingEvent[]
 }
 
-model Campaign {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  subject     String
-  senderName  String
-  htmlContent String
-  textContent String
-  status      String    @default("draft")
-  totalEmails Int       @default(0)
-  sentCount   Int       @default(0)
-  openCount   Int       @default(0)
-  clickCount  Int       @default(0)
-  bounceCount Int       @default(0)
-  scheduledAt DateTime?
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  recipients Recipient[]
-  logs       SendingLog[]
-
-  @@index([userId])
-  @@index([status])
-}
-
+// Campaign recipients
 model Recipient {
-  id         String    @id @default(cuid())
-  campaignId String
-  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  email      String
-  firstName  String?
-  lastName   String?
-  company    String?
-  tag        String?   // simple segment label, e.g. "vip", "trial-users"
-  priority   Int       @default(0) // higher sends first (VIP)
-  customFields String? // JSON string of arbitrary extra merge fields
-  status     String    @default("pending")
-  sentAt     DateTime?
-  openedAt   DateTime?
-  clickedAt  DateTime?
-  errorMsg   String?
+  id           String   @id @default(cuid())
+  campaignId   String
+  email        String
+  firstName    String?
+  lastName     String?
+  company      String?
+  tag          String?
+  priority     Int      @default(0)
+  customFields String?  // JSON string for extra merge fields
+  status       String   @default("pending") // pending | queued | sent | opened | clicked | failed | unsubscribed
+  errorMsg     String?
+  sentAt       DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  createdAt    DateTime @default(now())
 
-  @@unique([campaignId, email])
-  @@index([campaignId])
-  @@index([status])
-  @@index([email])
-  @@index([tag])
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, email])
+  @@index([campaignId, status])
 }
 
+// Email suppressions (unsubscribes / bounces)
+model Suppression {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  reason    String?  // unsubscribed | bounced | complained
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email])
+  @@index([userId, email])
+}
+
+// Blocked sender domains
 model BlockedDomain {
   id        String   @id @default(cuid())
   userId    String
   domain    String
-  reason    String?
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, domain])
 }
 
+// Delivery logs
 model SendingLog {
-  id          String        @id @default(cuid())
+  id          String   @id @default(cuid())
   campaignId  String
-  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   recipientId String?
   accountId   String?
-  account     EmailAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
-  status      String
+  status      String   // sent | failed | bounced
   error       String?
-  attempts    Int           @default(1)
-  createdAt   DateTime      @default(now())
+  attempts    Int      @default(1)
+  createdAt   DateTime @default(now())
 
-  @@index([campaignId])
-  @@index([accountId])
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
-model Suppression {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  email     String
-  reason    String?
-  createdAt DateTime @default(now())
+// Persisted pending jobs — survives server restarts
+model PendingJob {
+  id              String   @id
+  userId          String
+  data            String   // JSON-serialized job payload
+  attemptsMade    Int      @default(0)
+  maxAttempts     Int      @default(5)
+  backoffDelay    Int      @default(5000) // ms
+  addedAt         DateTime @default(now())
 
-  @@unique([userId, email])
+  @@index([addedAt])
+}
+
+// Open/click tracking events
+model TrackingEvent {
+  id          String   @id @default(cuid())
+  campaignId  String
+  recipientId String?
+  type        String   // open | click | unsubscribe
+  url         String?  // for clicks
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, type])
 }
